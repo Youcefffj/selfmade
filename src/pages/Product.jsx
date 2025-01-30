@@ -2,14 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
-import { ChevronDown, ChevronUp } from "lucide-react"; // Icônes pour le déroulé
+import { ChevronDown, ChevronUp, X } from "lucide-react"; // Icônes pour le déroulé et la fermeture
 
 const Product = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState("");
-  const [isDescriptionOpen, setIsDescriptionOpen] = useState(false); // État pour gérer le déroulé
+  const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false); // État pour gérer le mode plein écran
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -19,7 +20,7 @@ const Product = () => {
         if (docSnap.exists()) {
           const productData = docSnap.data();
           setProduct(productData);
-          setSelectedImage(productData.image); // Image principale par défaut
+          setSelectedImage(productData.image);
         } else {
           console.error("Produit non trouvé !");
         }
@@ -35,7 +36,6 @@ const Product = () => {
   if (loading) return <p className="text-center mt-6">Chargement...</p>;
   if (!product) return <p className="text-center mt-6 text-red-500">Produit non trouvé.</p>;
 
-  // Récupération de toutes les images : Image principale + images supplémentaires
   const allImages = [product.image, ...(product.images || [])];
 
   return (
@@ -48,7 +48,8 @@ const Product = () => {
             <img 
               src={selectedImage} 
               alt={product.name} 
-              className="max-w-full max-h-[500px] object-contain rounded-lg shadow-md"
+              className="max-w-full max-h-[500px] object-contain rounded-lg shadow-md cursor-pointer"
+              onClick={() => setIsFullscreen(true)} // Active le mode plein écran
             />
           </div>
 
@@ -95,8 +96,20 @@ const Product = () => {
             Ajouter au panier 🛒
           </button>
         </div>
-        
       </div>
+
+      {/* Mode plein écran */}
+      {isFullscreen && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+          <button
+            className="absolute top-5 right-5 text-white text-3xl"
+            onClick={() => setIsFullscreen(false)}
+          >
+            <X size={40} />
+          </button>
+          <img src={selectedImage} alt="Fullscreen" className="max-w-full max-h-screen object-contain rounded-lg" />
+        </div>
+      )}
     </div>
   );
 };
