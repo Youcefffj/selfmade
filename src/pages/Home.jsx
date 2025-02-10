@@ -1,46 +1,59 @@
-import React from "react";
+import { db } from "../firebaseConfig";
+import { collection, getDocs } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 
-const Home = () => {
+export default function Home() {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const querySnapshot = await getDocs(collection(db, "products"));
+        const productsArray = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setProducts(productsArray.slice(0, 6)); // Limite à 6 produits
+      } catch (error) {
+        console.error("Erreur lors de la récupération des produits :", error);
+      }
+    }
+    fetchProducts();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Hero Banner */}
-      <section className="relative bg-cover bg-center h-[500px] flex items-center justify-center text-center text-white"
-        style={{ backgroundImage: "url('https://source.unsplash.com/1600x900/?fashion')" }}>
-        <div className="bg-black bg-opacity-50 p-10 rounded-lg">
-          <h1 className="text-5xl font-extrabold">Nouvelle Collection 2025</h1>
-          <p className="text-lg mt-4">Découvrez nos dernières pièces exclusives.</p>
-          <Link to="/shop" className="mt-6 inline-flex items-center bg-white text-black px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition">
-            Voir la Boutique <ArrowRight className="ml-2" />
+    <div className="min-h-screen p-8 bg-gray-100">
+      <h1 className="text-3xl font-bold text-center mb-6">Bienvenue sur Selfmade 🛍️</h1>
+      
+      {/* Affichage des 6 produits */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {products.map((product) => (
+          <Link 
+            key={product.id} 
+            to={`/product/${product.id}`} 
+            className="block bg-white p-4 rounded-lg shadow-lg hover:shadow-xl transition"
+          >
+            <img 
+              src={product.image} 
+              alt={product.name} 
+              className="w-full h-64 object-cover rounded-md" 
+            />
+            <h3 className="text-lg font-semibold mt-4">{product.name}</h3>
+            <p className="text-gray-500">{product.price} €</p>
           </Link>
-        </div>
-      </section>
+        ))}
+      </div>
 
-      {/* Section Nouveaux Produits */}
-      <section className="py-12 px-6">
-        <h2 className="text-3xl font-bold text-center mb-6">Nouveaux Produits</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((id) => (
-            <Link 
-              key={id} 
-              to={`/product/${id}`} 
-              className="block bg-white p-4 rounded-lg shadow-lg text-center hover:shadow-xl transition"
-            >
-              <img 
-                src={`https://source.unsplash.com/400x400/?clothing&sig=${id}`} 
-                alt="Produit" 
-                className="w-full h-64 object-cover rounded-md" 
-              />
-              <h3 className="text-lg font-semibold mt-4">Produit #{id}</h3>
-              <p className="text-gray-500">Exclusivité disponible maintenant.</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
+      {/* Bouton pour voir plus de produits */}
+      <div className="text-center mt-8">
+        <Link 
+          to="/shop" 
+          className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition"
+        >
+          Voir tous les produits →
+        </Link>
+      </div>
     </div>
   );
-};
-
-export default Home;
+}
